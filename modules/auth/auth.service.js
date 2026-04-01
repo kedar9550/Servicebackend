@@ -4,43 +4,46 @@ require("../role/role.model");
 require("../role/permission.model");
 
 const loginUser = async (id, password, app) => {
+    console.log(`🔐 Login attempt for ID: ${id} on app: ${app}`);
 
-  //console.log("Incoming id:", id);
+    const user = await User.findOne({
+        institutionId: id
+    });
 
-  const user = await User.findOne({
-    institutionId: id
-  });
+    if (!user) {
+        console.warn(`❌ Login failed: User not found for ID: ${id}`);
+        throw new Error("User not found");
+    }
 
-  //console.log("User found:", user)
+    const match = await user.comparePassword(password);
+    if (!match) {
+        console.warn(`❌ Login failed: Invalid password for ID: ${id}`);
+        throw new Error("Invalid password");
+    }
 
-  if (!user) throw new Error("User not found");
+    const mappings = await UserAppRole.find({
+        userId: user._id,
+        app
+    }).populate({
+        path: "role",
+        populate: { path: "permissions" }
+    });
 
-  const match = await user.comparePassword(password);
-  //console.log("Password match:", match);
+    if (!mappings.length) {
+        console.warn(`❌ Login failed: No role assigned for user ${id} in app ${app}`);
+        throw new Error("No role assigned");
+    }
 
-  if (!match) throw new Error("Invalid password");
+    const roles = mappings.map(m => ({
+        role: m.role.name,
+        service: m.service,
+        permissions: m.role.permissions.map(p => p.key)
+    }));
 
-  const mappings = await UserAppRole.find({
-    userId: user._id,
-    app
-  }).populate({
-    path: "role",
-    populate: { path: "permissions" }
-  });
-
-  if (!mappings.length)
-    throw new Error("No role assigned");
-
-  const roles = mappings.map(m => ({
-    role: m.role.name,
-    service: m.service,
-    permissions: m.role.permissions.map(p => p.key)
-  }));
-
-  return {
-    user,
-    roles
-  };
+    return {
+        user,
+        roles
+    };
 };
 
 module.exports = { loginUser };
