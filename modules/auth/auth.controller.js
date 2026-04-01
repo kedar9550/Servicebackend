@@ -15,7 +15,7 @@ const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcrypt");
 
-const isProd = process.env.NODE_ENV === "PRODUCTION";
+const isProd = process.env.NODE_ENV?.toLowerCase() === "production";
 
 /* ===================================================
    REGISTER
