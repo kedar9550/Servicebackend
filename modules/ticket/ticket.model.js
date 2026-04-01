@@ -59,6 +59,10 @@ const ticketSchema = new mongoose.Schema({
     type: String,
     enum: ["OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED", "REJECTED", "CLOSED"],
     default: "OPEN"
+  },
+  rejectionReason: {
+    type: String,
+    default: ""
   }
 
 }, { timestamps: true });

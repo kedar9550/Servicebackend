@@ -232,7 +232,8 @@ exports.getTeamDashboard = async (req, res) => {
     // 2️ Ticket DB
     const tickets = await Ticket.find({
       service: serviceId,
-      "assignedTo.user": { $in: userIds }
+      "assignedTo.user": { $in: userIds },
+      status: { $ne: "REJECTED" } // Ignore formally rejected tickets in the summary
     });
 
     // 3️Merge

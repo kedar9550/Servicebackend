@@ -453,7 +453,7 @@ exports.updateAssignmentStatus = async (req, res) => {
             title: "Ticket Status Updated",
             message: `Ticket ${ticket.ticketNumber} status updated to ${status}.`,
             ticketId: ticket._id,
-            type: "STATUS_UPDATED"
+            type: status === "REJECTED" ? "ASSIGNMENT_REJECTED" : "STATUS_UPDATED"
           });
           io.to(`user_${admin.userId}`).emit("new_notification", adminNotif);
         }
@@ -467,8 +467,11 @@ exports.updateAssignmentStatus = async (req, res) => {
 exports.adminRejectTicket = async (req, res) => {
 
   const ticket = await Ticket.findById(req.params.id);
+  const { comment } = req.body;
 
   ticket.status = "REJECTED";
+  ticket.rejectionReason = comment || "";
+  ticket.assignedTo = []; // Clear assignments when ticket is rejected by admin
   deleteTicketAttachments(ticket);
 
   await ticket.save();
@@ -476,7 +479,8 @@ exports.adminRejectTicket = async (req, res) => {
   await Activity.create({
     ticket: ticket._id,
     action: "TICKET_REJECTED",
-    performedBy: req.user._id
+    performedBy: req.user._id,
+    metadata: { comment: comment || "" }
   });
 
   res.json({ message: "Ticket rejected" });
@@ -498,6 +502,7 @@ exports.getUnassignedTickets = async (req, res) => {
 
     const tickets = await Ticket.find({
       service: serviceId,
+      status: { $ne: "REJECTED" }, // Exclude tickets that were finally rejected by admin
       $or: [
         { assignedTo: { $exists: false } },
         { assignedTo: { $size: 0 } }
@@ -674,7 +679,8 @@ exports.getAssignedTickets = async (req, res) => {
   try {
 
     const tickets = await Ticket.find({
-      "assignedTo.user": req.user._id
+      "assignedTo.user": req.user._id,
+      status: { $ne: "REJECTED" } // Don't show rejected tickets in assigned list
     })
       .populate("service", "name")
       .sort({ createdAt: -1 });
