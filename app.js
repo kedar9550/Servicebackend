@@ -11,10 +11,20 @@ const teamRoutes = require("./modules/ticket/team.routes");
 //MIDDLEWARES
 
 
-app.use(cors({
-  origin: process.env.FRONTEND_URI,
-  credentials: true
-}))
+const frontendUri = process.env.FRONTEND_URI;
+const allowedOrigins = [frontendUri];
+if (frontendUri && frontendUri.endsWith("/")) {
+  allowedOrigins.push(frontendUri.slice(0, -1));
+} else if (frontendUri) {
+  allowedOrigins.push(frontendUri + "/");
+}
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  })
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
