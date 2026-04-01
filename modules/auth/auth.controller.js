@@ -444,8 +444,8 @@ const getMe = async (req, res) => {
 const logoutUser = (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: isProd,
-    sameSite: isProd ? "none" : "lax"
+    secure: true,
+    sameSite: "none"
   });
 
   res.json({ message: "Logged out" });
