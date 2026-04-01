@@ -1,0 +1,32 @@
+[
+  {
+    "userType": "Student",
+    "isActive": true,
+    "profileImage": null,
+    "_id": "69741ad4e0b480bae2863a55",
+    "name": "Ganesha",
+    "email": "ganesha@gmail.com",
+    "age": 97,
+    "password": "$2b$10$XqSL7ZfPlIlz6zPu3VNgJumC6PTbXjdjha7PF6.6u4eLyXTnkMZ1u",
+    "role": "user",
+    "addresses": [],
+    "createdAt": "2026-01-24T01:05:24.752Z",
+    "updatedAt": "2026-01-24T01:05:24.752Z",
+    "__v": 0
+  },
+  {
+    "userType": "Student",
+    "isActive": true,
+    "profileImage": null,
+    "_id": "69745c75ff14db34910b0041",
+    "name": "Suresh",
+    "email": "suresh@gmail.com",
+    "age": 29,
+    "password": "$2b$10$S9ypyHvZVQTWDxNou9QJ1uQo1PKiK7HTbgIYxyIxEarUQBXjSDBQO",
+    "role": "user",
+    "addresses": [],
+    "createdAt": "2026-01-24T05:45:25.943Z",
+    "updatedAt": "2026-01-24T05:45:25.943Z",
+    "__v": 0
+  }
+]
