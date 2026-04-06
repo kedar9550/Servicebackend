@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const UserAppRole = require("../modules/auth/userAppRole.model");
 const Role = require("../modules/role/role.model");
-const usermodel = require('../modules/auth/auth.model')
+const usermodel = require('../modules/auth/auth.model');
 
 module.exports = async (req, res, next) => {
 
@@ -14,16 +14,14 @@ module.exports = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const userdata = await usermodel.findById(decoded.userId);
-    
-    // console.log("refersh User Data:", userdata);
 
     req.user = {
       _id: decoded.userId,
-      roles: decoded.roles,  
+      roles: decoded.roles,
       name: userdata.name,
       institutionId: userdata.institutionId,
       department: userdata.department,
-      designation:userdata.designation,
+      designation: userdata.designation,
       email: userdata.email,
       phone: userdata.phone,
       profileImage: userdata.profileImage

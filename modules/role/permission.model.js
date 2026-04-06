@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const authDB = require("../../config/db/authDB");
+const ticketDB = require("../../config/db/ticketDB");
 
 const PermissionSchema = new mongoose.Schema({
 
@@ -17,4 +17,4 @@ const PermissionSchema = new mongoose.Schema({
 
 }, { timestamps: true });
 
-module.exports = authDB.model("Permission", PermissionSchema);
+module.exports = ticketDB.model("Permission", PermissionSchema);

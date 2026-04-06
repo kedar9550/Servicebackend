@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcrypt");
-const authDB = require("../../config/db/authDB");
+const commonusersDB = require("../../config/db/commonusersDB");
 
 const UserSchema = new mongoose.Schema({
 
@@ -30,48 +30,48 @@ const UserSchema = new mongoose.Schema({
     default: ""
   },
   email: {
-  type: String,
-  required: true,
-  unique: true,
-  trim: true,
-  lowercase: true,
-  validate: [validator.isEmail, "Invalid email"]
-},
+    type: String,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    validate: [validator.isEmail, "Invalid email"]
+  },
 
   password: {
-  type: String,
-  required: true,
-  minlength: 6
-},
+    type: String,
+    required: true,
+    minlength: 6
+  },
 
   phone: {
-  type: String,
-  required: true,
-  trim: true,
-  validate: {
-    validator: (v) => validator.isMobilePhone(v, 'any'),
-    message: "Invalid phone number"
-  }
-},
+    type: String,
+    required: true,
+    trim: true,
+    validate: {
+      validator: (v) => validator.isMobilePhone(v, 'any'),
+      message: "Invalid phone number"
+    }
+  },
 
   userType: {
-  type: String,
-  enum: ["Student", "Employee"],
-  default: "Student"
-},
+    type: String,
+    enum: ["Student", "Employee"],
+    default: "Student"
+  },
 
   isActive: {
-  type: Boolean,
-  default: true
-},
+    type: Boolean,
+    default: true
+  },
 
   otp: String,
   otpExpiry: Date,
 
   profileImage: {
-  type: String,
-  default: null
-}
+    type: String,
+    default: null
+  }
 
 }, { timestamps: true });
 
@@ -89,4 +89,4 @@ UserSchema.methods.comparePassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-module.exports = authDB.model("User", UserSchema);
+module.exports = commonusersDB.model("User", UserSchema);
