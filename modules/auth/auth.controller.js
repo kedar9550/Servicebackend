@@ -145,11 +145,6 @@ const registerUser = async (req, res) => {
       permissions: [] // New users with default role typically have no special permissions yet
     }];
 
-    generateToken({
-      userId: user._id,
-      app: "TICKET_SYSTEM",
-      roles
-    }, res);
 
     res.status(201).json({
       message: "User registered",

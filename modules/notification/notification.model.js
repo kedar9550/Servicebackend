@@ -22,7 +22,7 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ["TICKET_CREATED", "TICKET_ASSIGNED", "STATUS_UPDATED", "NEW_COMMENT"],
+    enum: ["TICKET_CREATED", "TICKET_ASSIGNED", "STATUS_UPDATED", "NEW_COMMENT", "FEEDBACK_REQUEST"],
     required: true
   },
   isRead: {

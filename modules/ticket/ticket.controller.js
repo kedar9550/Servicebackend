@@ -2,6 +2,7 @@ const Ticket = require("./ticket.model");
 const User = require('../auth/auth.model')
 const Comment = require("./comment.model");
 const Activity = require("./activity.model");
+const Feedback = require("./feedback.model");
 const fs = require("fs");
 const path = require("path");
 const { hasTicketAccess } = require("./ticket.access");
@@ -443,6 +444,18 @@ exports.updateAssignmentStatus = async (req, res) => {
     });
     io.to(`user_${ticket.createdBy}`).emit("new_notification", userNotif);
 
+    // Trigger Feedback Request if resolved
+    if (ticket.status === "RESOLVED") {
+      const feedbackNotif = await Notification.create({
+        user: ticket.createdBy,
+        title: "Feedback Requested",
+        message: `Please share your feedback for Ticket ${ticket.ticketNumber}.`,
+        ticketId: ticket._id,
+        type: "FEEDBACK_REQUEST"
+      });
+      io.to(`user_${ticket.createdBy}`).emit("new_notification", feedbackNotif);
+    }
+
     const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
     if (adminRole) {
       const adminUsers = await UserAppRole.find({ role: adminRole._id, service: ticket.service });
@@ -824,13 +837,59 @@ exports.getDepartmentReports = async (req, res) => {
       query.priority = priority.toUpperCase();
     }
 
-    // Exclude rejected tickets from reports
     query.status = { $ne: "REJECTED" };
 
     const tickets = await Ticket.find(query)
       .populate("service", "name")
       .sort({ createdAt: -1 })
       .lean();
+
+    // --- Feedback Aggregation ---
+    const ticketIds = tickets.map(t => t._id);
+    const feedbacks = await Feedback.find({
+      ticket: { $in: ticketIds }
+    }).lean();
+
+    const totalFeedback = feedbacks.length;
+    let sumRating = 0;
+    let positiveCount = 0;
+    let negativeCount = 0;
+    let feedbackCommentsCount = 0;
+
+    // Distributions
+    const ratingDistribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    const satisfactionDistribution = {
+      "Very Satisfied": 0,
+      "Satisfied": 0,
+      "Neutral": 0,
+      "Dissatisfied": 0,
+      "Very Dissatisfied": 0
+    };
+
+    feedbacks.forEach(f => {
+      sumRating += f.rating;
+      if (f.rating >= 4) positiveCount++;
+      if (f.rating <= 2) negativeCount++;
+      if (f.comments && f.comments.trim().length > 0) feedbackCommentsCount++;
+
+      // Update distributions
+      if (ratingDistribution[f.rating] !== undefined) ratingDistribution[f.rating]++;
+      if (satisfactionDistribution[f.satisfaction] !== undefined) satisfactionDistribution[f.satisfaction]++;
+    });
+
+    const averageRating = totalFeedback > 0 ? (sumRating / totalFeedback).toFixed(1) : 0;
+    const positivePercent = totalFeedback > 0 ? ((positiveCount / totalFeedback) * 100).toFixed(1) : 0;
+    const negativePercent = totalFeedback > 0 ? ((negativeCount / totalFeedback) * 100).toFixed(1) : 0;
+
+    const feedbackSummary = {
+      averageRating,
+      totalFeedback,
+      positiveFeedback: { count: positiveCount, percentage: positivePercent },
+      negativeFeedback: { count: negativeCount, percentage: negativePercent },
+      commentsCount: feedbackCommentsCount,
+      ratingDistribution,
+      satisfactionDistribution
+    };
 
     // Cross-DB User Population for Assigned To
     const allUserIds = [];
@@ -854,11 +913,13 @@ exports.getDepartmentReports = async (req, res) => {
 
     // Last 30 days map
     const trendMap = {};
+    const feedbackTrendMap = {};
     for (let i = 29; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = `${d.getDate().toString().padStart(2, '0')}-${(d.getMonth() + 1).toString().padStart(2, '0')}`;
       trendMap[dateStr] = { date: dateStr, created: 0, closed: 0 };
+      feedbackTrendMap[dateStr] = { date: dateStr, count: 0 };
     }
 
     // console.log(`--- Reporting Diagnostic: Total Tickets Found: ${tickets.length} ---`);
@@ -891,6 +952,14 @@ exports.getDepartmentReports = async (req, res) => {
         if (trendMap[closedDateStr]) {
           trendMap[closedDateStr].closed += 1;
         }
+      }
+    });
+
+    // Feedback Trend
+    feedbacks.forEach(f => {
+      const feedbackDateStr = `${new Date(f.createdAt).getDate().toString().padStart(2, '0')}-${(new Date(f.createdAt).getMonth() + 1).toString().padStart(2, '0')}`;
+      if (feedbackTrendMap[feedbackDateStr]) {
+        feedbackTrendMap[feedbackDateStr].count += 1;
       }
     });
 
@@ -930,7 +999,9 @@ exports.getDepartmentReports = async (req, res) => {
         avgHandlingTime: `${avgHandlingTime} Days`,
         overdueTickets
       },
+      feedbackSummary,
       trendData,
+      feedbackTrendData: Object.values(feedbackTrendMap),
       statusData,
       recentTickets
     });

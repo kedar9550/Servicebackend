@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 const ticketController = require("./ticket.controller");
+const feedbackController = require("./feedback.controller");
 const protect = require("../../middlewares/auth.middleware");
 const authorize = require("../../middlewares/permission.middleware");
 const upload = require("../../middlewares/upload.middleware");
@@ -64,6 +65,19 @@ router.get(
   protect,
   authorize("ASSIGN_TICKET"),
   ticketController.getRejectedForApproval
+);
+
+// ✅ FEEDBACK ROUTES
+router.post(
+  "/feedback",
+  protect,
+  feedbackController.submitFeedback
+);
+
+router.get(
+  "/feedback/pending",
+  protect,
+  feedbackController.getPendingFeedback
 );
 
 // ✅ SERVICE SPECIFIC TICKETS
