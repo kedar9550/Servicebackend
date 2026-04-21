@@ -80,6 +80,13 @@ router.get(
   feedbackController.getPendingFeedback
 );
 
+router.get(
+  "/feedback/all",
+  protect,
+  authorize("ASSIGN_TICKET"), // Assuming Admins/SuperAdmins have this permission
+  feedbackController.getAllFeedback
+);
+
 // ✅ SERVICE SPECIFIC TICKETS
 router.get(
   "/service/:serviceId",
