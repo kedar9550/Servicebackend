@@ -12,10 +12,19 @@ exports.submitFeedback = async (req, res) => {
     }
 
     const ticket = await Ticket.findById(ticketId);
-    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+    if (!ticket) {
+      console.warn(`[Feedback] Ticket not found: ${ticketId}`);
+      return res.status(404).json({ message: "Ticket not found" });
+    }
 
     // Ensure user owns the ticket
-    if (ticket.createdBy.toString() !== req.user._id.toString()) {
+    const creatorId = ticket.createdBy._id || ticket.createdBy;
+    const userId = req.user._id;
+
+    console.log(`[Feedback] Comparing IDs - Creator: ${creatorId}, Submitter: ${userId}`);
+
+    if (creatorId.toString() !== userId.toString()) {
+      console.warn(`[Feedback] Access denied. User ${userId} tried to submit feedback for ticket ${ticketId} created by ${creatorId}`);
       return res.status(403).json({ message: "Access denied" });
     }
 

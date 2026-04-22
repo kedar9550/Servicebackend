@@ -482,9 +482,19 @@ const updateProfile = async (req, res) => {
 
 const profileImage = async (req, res) => {
   try {
-    const user = await UserModel.findById(req.user._id);
+    if (!req.file) {
+      console.warn("[ProfileImage] No file received in request");
+      return res.status(400).json({ message: "No file uploaded" });
+    }
 
-    //  Delete old image if exists
+    const user = await UserModel.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    console.log(`[ProfileImage] User ${user._id} uploading ${req.file.filename}`);
+
+    // Delete old image if exists
     if (user.profileImage && user.profileImage !== req.file.filename) {
       const oldPath = path.join(
         __dirname,
@@ -498,8 +508,9 @@ const profileImage = async (req, res) => {
       if (fs.existsSync(oldPath)) {
         try {
           fs.unlinkSync(oldPath);
+          console.log(`[ProfileImage] Deleted old image: ${user.profileImage}`);
         } catch (unlinkErr) {
-          console.error("Failed to delete old image:", unlinkErr);
+          console.error("[ProfileImage] Failed to delete old image:", unlinkErr);
         }
       }
     }
@@ -509,16 +520,17 @@ const profileImage = async (req, res) => {
       { _id: user._id },
       { $set: { profileImage: req.file.filename } }
     );
-    user.profileImage = req.file.filename;
+    
+    console.log(`[ProfileImage] Database updated for user ${user._id}`);
 
     res.json({
-      message: "Image uploaded",
-      image: user.profileImage
+      message: "Image uploaded successfully",
+      image: req.file.filename
     });
 
   } catch (err) {
-    console.error("Profile image Error:", err);
-    res.status(500).json({ message: "Upload failed: " + err.message, stack: err.stack });
+    console.error("[ProfileImage] Error:", err);
+    res.status(500).json({ message: "Upload failed: " + err.message });
   }
 };
 
