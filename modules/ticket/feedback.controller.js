@@ -109,7 +109,7 @@ exports.getAllFeedback = async (req, res) => {
     const feedbacks = await Feedback.find(query)
       .populate({
         path: "ticket",
-        select: "ticketNumber title service assignedTo status updatedAt",
+        select: "ticketNumber title description service assignedTo status updatedAt",
         populate: {
           path: "service",
           select: "name"
