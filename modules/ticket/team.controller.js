@@ -21,37 +21,28 @@ exports.getTeamDashboard = async (req, res) => {
       app: "TICKET_SYSTEM"
     });
 
-    // 1️ ticketDB — UserAppRole fetch (NO populate — cross-DB fix)
+    // 1️ Fetch Team Mappings with User Details
     const teamMappings = await UserAppRole.find({
       role: employeeRole._id,
       service: serviceId
-    }).lean();
+    }).populate("userId").lean();
 
-    const userIds = teamMappings.map(m => m.userId);
+    const userIds = teamMappings.map(m => m.userId ? m.userId._id : m.userId);
 
-    // 2️ commonusersDB — Users manually fetch
-    const users = await User.find({
-      _id: { $in: userIds }
-    }).lean();
-
-    const userMap = {};
-    users.forEach(u => { userMap[u._id.toString()] = u; });
-
-    // 3️ ticketDB — Tickets fetch
+    // 2️ Tickets fetch
     const tickets = await Ticket.find({
       service: serviceId,
       "assignedTo.user": { $in: userIds },
       status: { $ne: "REJECTED" }
     }).lean();
 
-    // 4️ Merge
+    // 3️ Merge
     let totalActiveTickets = 0;
 
     const members = teamMappings.map(mapping => {
-      const uid = mapping.userId.toString();
-      const userData = userMap[uid];
-
+      const userData = mapping.userId;
       if (!userData) return null;
+      const uid = userData._id.toString();
 
       const activeTicketsList = tickets.filter(ticket =>
         ticket.assignedTo.some(a =>

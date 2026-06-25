@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const bcrypt = require("bcrypt");
-const commonusersDB = require("../../config/db/commonusersDB");
+const ticketDB = require("../../config/db/ticketDB");
 
 const UserSchema = new mongoose.Schema({
 
@@ -89,4 +89,4 @@ UserSchema.methods.comparePassword = function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-module.exports = commonusersDB.model("User", UserSchema);
+module.exports = ticketDB.model("User", UserSchema);

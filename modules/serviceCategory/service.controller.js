@@ -62,11 +62,9 @@ exports.assignAdminToService = async (req, res) => {
     const service = await Service.findById(serviceId);
     if (!service) return res.status(404).json({ message: "Service not found" });
 
-    // commonusersDB
     const user = await User.findById(user_id);
     if (!user) return res.status(404).json({ message: "User not found. Please create user first." });
 
-    // ticketDB
     const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
 
     const alreadyAssigned = await UserAppRole.findOne({
@@ -95,23 +93,11 @@ exports.getServiceAdmins = async (req, res) => {
 
     const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
 
-    // ticketDB — NO cross-DB populate
-    const admins = await UserAppRole.find({ service: serviceId, role: adminRole._id }).lean();
+    const admins = await UserAppRole.find({ service: serviceId, role: adminRole._id })
+      .populate("userId", "name institutionId email")
+      .lean();
 
-    // commonusersDB — manual fetch
-    const userIds = admins.map(a => a.userId);
-    const users = await User.find({ _id: { $in: userIds } })
-      .select("name institutionId email").lean();
-
-    const userMap = {};
-    users.forEach(u => { userMap[u._id.toString()] = u; });
-
-    const result = admins.map(a => ({
-      ...a,
-      userId: userMap[a.userId.toString()] || a.userId
-    }));
-
-    res.json(result);
+    res.json(admins);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -150,26 +136,18 @@ exports.getServiceStats = async (req, res) => {
       { $group: { _id: "$service", totalEmployees: { $sum: 1 } } }
     ]);
 
-    // 4️ Admin mappings — ticketDB (NO $lookup — cross-DB fix)
+    // 4️ Admin mappings
     const adminMappings = await UserAppRole.find({
       service: { $in: serviceIds },
       role: adminRole._id
-    }).lean();
+    }).populate("userId", "name institutionId email").lean();
 
-    // 5️ Fetch admin user details — commonusersDB
-    const adminUserIds = adminMappings.map(m => m.userId);
-    const adminUsers = await User.find({ _id: { $in: adminUserIds } })
-      .select("name institutionId email").lean();
-
-    const adminUserMap = {};
-    adminUsers.forEach(u => { adminUserMap[u._id.toString()] = u; });
-
-    // 6️ Group admins by service
+    // 5️ Group admins by service
     const adminMap = {};
     adminMappings.forEach(m => {
       const sid = m.service.toString();
       if (!adminMap[sid]) adminMap[sid] = [];
-      const user = adminUserMap[m.userId.toString()];
+      const user = m.userId;
       if (user) {
         adminMap[sid].push({
           name: user.name,
