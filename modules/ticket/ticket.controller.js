@@ -407,6 +407,8 @@ exports.updateAssignmentStatus = async (req, res) => {
     return res.status(400).json({ message: "Cannot change status once it is marked as resolved or rejected." });
   }
 
+  const previousStatus = assignment.status;
+
   assignment.status = status;
   assignment.note = note;
   assignment.updatedAt = new Date();
@@ -425,6 +427,15 @@ exports.updateAssignmentStatus = async (req, res) => {
     ticket.status = "OPEN";
 
   await ticket.save();
+
+  if (status === "RESOLVED" && previousStatus !== "IN_PROGRESS") {
+    await Activity.create({
+      ticket: ticket._id,
+      action: "STATUS_UPDATED",
+      performedBy: userId,
+      metadata: { status: "IN_PROGRESS", note: "Auto-transitioned to In Progress before resolving" }
+    });
+  }
 
   await Activity.create({
     ticket: ticket._id,
