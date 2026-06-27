@@ -50,6 +50,9 @@ const sendPushNotification = async (token, title, body, data = {}) => {
       webpush: {
         headers: {
           Urgency: 'high'
+        },
+        fcm_options: {
+          link: '/'
         }
       }
     };
