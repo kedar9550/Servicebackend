@@ -43,7 +43,15 @@ const sendPushNotification = async (token, title, body, data = {}) => {
         body
       },
       data,
-      token
+      token,
+      android: {
+        priority: 'high'
+      },
+      webpush: {
+        headers: {
+          Urgency: 'high'
+        }
+      }
     };
 
     const response = await admin.messaging().send(message);
