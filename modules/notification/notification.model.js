@@ -38,4 +38,22 @@ const notificationSchema = new mongoose.Schema({
 
 notificationSchema.index({ user: 1, isRead: 1 });
 
+notificationSchema.post("save", async function (doc, next) {
+  try {
+    const User = require("../auth/auth.model");
+    const { sendPushNotification } = require("../notifications/firebase");
+    
+    const user = await User.findById(doc.user);
+    if (user && user.fcmToken) {
+      await sendPushNotification(user.fcmToken, doc.title, doc.message, {
+        ticketId: doc.ticketId ? doc.ticketId.toString() : "",
+        type: doc.type
+      });
+    }
+  } catch (err) {
+    console.error("Error in notification post save hook:", err);
+  }
+  next();
+});
+
 module.exports = ticketDB.model("Notification", notificationSchema);

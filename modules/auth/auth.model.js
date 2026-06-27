@@ -71,6 +71,11 @@ const UserSchema = new mongoose.Schema({
   profileImage: {
     type: String,
     default: null
+  },
+
+  fcmToken: {
+    type: String,
+    default: null
   }
 
 }, { timestamps: true });

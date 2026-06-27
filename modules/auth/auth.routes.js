@@ -62,6 +62,12 @@ router.put(
 );
 
 router.post(
+  "/save-fcm-token",
+  authMiddleware,
+  controller.saveFcmToken
+);
+
+router.post(
   "/profile-change",
   authMiddleware,
   profileUpload.single("image"),

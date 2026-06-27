@@ -667,6 +667,24 @@ const getActiveUsersCount = async (req, res) => {
 };
 
 
+const saveFcmToken = async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    const userId = req.user.id; // from authMiddleware
+
+    if (!fcmToken) {
+      return res.status(400).json({ message: "FCM token is required" });
+    }
+
+    await User.findByIdAndUpdate(userId, { fcmToken });
+    
+    res.json({ message: "FCM token saved successfully" });
+  } catch (error) {
+    console.error("Save FCM Token Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   validateUser,
@@ -682,4 +700,5 @@ module.exports = {
   searchUser,
   getecapdata,
   getActiveUsersCount,
+  saveFcmToken,
 };
