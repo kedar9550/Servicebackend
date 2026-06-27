@@ -1,9 +1,30 @@
 const admin = require("firebase-admin");
-const serviceAccount = require("../../config/serviceAccountKey.json");
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount)
-});
+let serviceAccount;
+
+// Check if credentials are provided via Environment Variable (For Render/Production)
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  try {
+    serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  } catch (err) {
+    console.error("Failed to parse FIREBASE_SERVICE_ACCOUNT from environment variables.");
+  }
+} else {
+  // Fallback to local file for development
+  try {
+    serviceAccount = require("../../config/serviceAccountKey.json");
+  } catch (err) {
+    console.error("serviceAccountKey.json not found locally.");
+  }
+}
+
+if (serviceAccount) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+} else {
+  console.error("Firebase Admin could not be initialized. Missing credentials.");
+}
 
 /**
  * Send a push notification to a specific FCM token
