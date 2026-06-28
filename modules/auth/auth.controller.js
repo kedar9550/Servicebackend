@@ -670,7 +670,7 @@ const getActiveUsersCount = async (req, res) => {
 const saveFcmToken = async (req, res) => {
   try {
     const { fcmToken } = req.body;
-    const userId = req.user.id; // from authMiddleware
+    const userId = req.user._id; // from authMiddleware
 
     if (!fcmToken) {
       return res.status(400).json({ message: "FCM token is required" });
