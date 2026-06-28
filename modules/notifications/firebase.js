@@ -1,4 +1,4 @@
-const { initializeApp, cert } = require("firebase-admin/app");
+const { initializeApp, cert, getApps } = require("firebase-admin/app");
 const { getMessaging } = require("firebase-admin/messaging");
 
 let serviceAccount;
@@ -20,10 +20,12 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 }
 
 if (serviceAccount) {
-  initializeApp({
-    credential: cert(serviceAccount)
-  });
-  console.log("Firebase Admin initialized successfully.");
+  if (getApps().length === 0) {
+    initializeApp({
+      credential: cert(serviceAccount)
+    });
+    console.log("Firebase Admin initialized successfully.");
+  }
 } else {
   console.error("Firebase Admin could not be initialized. Missing credentials.");
 }
