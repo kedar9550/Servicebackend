@@ -43,12 +43,21 @@ notificationSchema.post("save", async function (doc, next) {
     const User = require("../auth/auth.model");
     const { sendPushNotification } = require("../notifications/firebase");
     
+    console.log(`Notification post-save hook triggered for user ID: ${doc.user}`);
+    
     const user = await User.findById(doc.user);
-    if (user && user.fcmToken) {
-      await sendPushNotification(user.fcmToken, doc.title, doc.message, {
-        ticketId: doc.ticketId ? doc.ticketId.toString() : "",
-        type: doc.type
-      });
+    if (user) {
+      console.log(`User found: ${user.email}, FCM Token exists: ${!!user.fcmToken}`);
+      if (user.fcmToken) {
+        await sendPushNotification(user.fcmToken, doc.title, doc.message, {
+          ticketId: doc.ticketId ? doc.ticketId.toString() : "",
+          type: doc.type
+        });
+      } else {
+        console.log(`Skipping push notification: User ${user.email} has no FCM token.`);
+      }
+    } else {
+      console.log(`User ${doc.user} not found in database.`);
     }
   } catch (err) {
     console.error("Error in notification post save hook:", err);
