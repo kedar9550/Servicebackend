@@ -74,6 +74,5 @@ const sendPushNotification = async (token, title, body, data = {}) => {
 };
 
 module.exports = {
-  admin,
   sendPushNotification
 };
