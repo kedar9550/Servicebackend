@@ -1,4 +1,5 @@
-const admin = require("firebase-admin");
+const { initializeApp, cert } = require("firebase-admin/app");
+const { getMessaging } = require("firebase-admin/messaging");
 
 let serviceAccount;
 
@@ -19,9 +20,10 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT) {
 }
 
 if (serviceAccount) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
+  initializeApp({
+    credential: cert(serviceAccount)
   });
+  console.log("Firebase Admin initialized successfully.");
 } else {
   console.error("Firebase Admin could not be initialized. Missing credentials.");
 }
@@ -57,7 +59,7 @@ const sendPushNotification = async (token, title, body, data = {}) => {
       }
     };
 
-    const response = await admin.messaging().send(message);
+    const response = await getMessaging().send(message);
     console.log("Successfully sent push notification:", response);
     return response;
   } catch (error) {
