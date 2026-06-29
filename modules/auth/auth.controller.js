@@ -444,7 +444,28 @@ const getMe = async (req, res) => {
   }
 };
 
-const logoutUser = (req, res) => {
+const jwt = require("jsonwebtoken");
+
+const logoutUser = async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    const token = req.cookies.token;
+
+    if (token && fcmToken) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        await UserModel.findByIdAndUpdate(decoded.userId, {
+          $pull: { fcmTokens: fcmToken }
+        });
+      } catch (err) {
+        // Token might be invalid/expired, ignore and proceed to clear cookie
+        console.warn("Logout token error or expired:", err.message);
+      }
+    }
+  } catch (error) {
+    console.error("Logout Error:", error);
+  }
+
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
@@ -676,7 +697,7 @@ const saveFcmToken = async (req, res) => {
       return res.status(400).json({ message: "FCM token is required" });
     }
 
-    await UserModel.findByIdAndUpdate(userId, { fcmToken });
+    await UserModel.findByIdAndUpdate(userId, { $addToSet: { fcmTokens: fcmToken } });
     
     res.json({ message: "FCM token saved successfully" });
   } catch (error) {

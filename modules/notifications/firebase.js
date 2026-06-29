@@ -31,14 +31,17 @@ if (serviceAccount) {
 }
 
 /**
- * Send a push notification to a specific FCM token
- * @param {string} token - The FCM device token
+ * Send a push notification to specific FCM tokens
+ * @param {string[]} tokens - The FCM device tokens array
  * @param {string} title - The title of the notification
  * @param {string} body - The body/message of the notification
  * @param {object} data - Optional data payload
+ * @returns {Promise<string[]>} Returns array of invalid tokens to be cleaned up
  */
-const sendPushNotification = async (token, title, body, data = {}) => {
-  if (!token) return;
+const sendPushNotification = async (tokens, title, body, data = {}) => {
+  if (!tokens || !Array.isArray(tokens) || tokens.length === 0) return [];
+
+  const invalidTokens = [];
 
   try {
     const message = {
@@ -47,7 +50,7 @@ const sendPushNotification = async (token, title, body, data = {}) => {
         body
       },
       data,
-      token,
+      tokens,
       android: {
         priority: 'high'
       },
@@ -61,15 +64,27 @@ const sendPushNotification = async (token, title, body, data = {}) => {
       }
     };
 
-    const response = await getMessaging().send(message);
-    console.log("Successfully sent push notification:", response);
-    return response;
+    const response = await getMessaging().sendEachForMulticast(message);
+    console.log(`Successfully sent push notification. Success: ${response.successCount}, Failed: ${response.failureCount}`);
+    
+    if (response.failureCount > 0) {
+      response.responses.forEach((resp, idx) => {
+        if (!resp.success) {
+          const errorCode = resp.error?.code;
+          if (
+            errorCode === 'messaging/invalid-registration-token' ||
+            errorCode === 'messaging/registration-token-not-registered'
+          ) {
+            invalidTokens.push(tokens[idx]);
+          }
+        }
+      });
+    }
+
+    return invalidTokens;
   } catch (error) {
     console.error("Error sending push notification:", error);
-    // If token is unregistered, we might want to handle it (e.g. remove from DB)
-    if (error.code === 'messaging/registration-token-not-registered') {
-      console.log('Token is no longer valid:', token);
-    }
+    return [];
   }
 };
 

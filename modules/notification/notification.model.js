@@ -47,14 +47,24 @@ notificationSchema.post("save", async function (doc, next) {
     
     const user = await User.findById(doc.user);
     if (user) {
-      console.log(`User found: ${user.email}, FCM Token exists: ${!!user.fcmToken}`);
-      if (user.fcmToken) {
-        await sendPushNotification(user.fcmToken, doc.title, doc.message, {
+      const hasTokens = user.fcmTokens && user.fcmTokens.length > 0;
+      console.log(`User found: ${user.email}, FCM Tokens exists: ${hasTokens}`);
+      if (hasTokens) {
+        const invalidTokens = await sendPushNotification(user.fcmTokens, doc.title, doc.message, {
           ticketId: doc.ticketId ? doc.ticketId.toString() : "",
           type: doc.type
         });
+        
+        // Clean up invalid tokens from the user's document
+        if (invalidTokens && invalidTokens.length > 0) {
+          console.log(`Cleaning up ${invalidTokens.length} invalid tokens for user ${user.email}`);
+          await User.updateOne(
+            { _id: user._id },
+            { $pull: { fcmTokens: { $in: invalidTokens } } }
+          );
+        }
       } else {
-        console.log(`Skipping push notification: User ${user.email} has no FCM token.`);
+        console.log(`Skipping push notification: User ${user.email} has no FCM tokens.`);
       }
     } else {
       console.log(`User ${doc.user} not found in database.`);
