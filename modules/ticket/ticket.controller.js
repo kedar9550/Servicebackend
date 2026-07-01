@@ -173,7 +173,7 @@ exports.getTicketById = async (req, res) => {
     const users = await User.find({
       _id: { $in: userIds }
     })
-      .select("name")
+      .select("name profileImage institutionId")
       .lean();
 
     // 8️Create lookup map
@@ -255,7 +255,7 @@ exports.addComment = async (req, res) => {
       message
     });
 
-    const populatedComment = await Comment.findById(comment._id).populate("user", "name email profileImage").lean();
+    const populatedComment = await Comment.findById(comment._id).populate("user", "name email profileImage institutionId").lean();
     populatedComment.role = req.user.roles?.some(r => r.role === "ADMIN" || r.role === "EMPLOYEE") ? "Support Agent" : "User";
 
     try {
