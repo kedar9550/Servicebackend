@@ -921,6 +921,7 @@ exports.getDepartmentReports = async (req, res) => {
     let pending = 0;
     let assigned = 0;
     let overdueTickets = 0;
+    let employeeRejected = 0;
 
     // Last 30 days map
     const trendMap = {};
@@ -936,13 +937,20 @@ exports.getDepartmentReports = async (req, res) => {
     // console.log(`--- Reporting Diagnostic: Total Tickets Found: ${tickets.length} ---`);
     tickets.forEach(ticket => {
       // console.log(`Ticket: ${ticket.ticketNumber}, Status: ${ticket.status}`);
-      // 1. Resolve Count: Only count "RESOLVED" (exclude "CLOSED" to match user perception)
-      if (ticket.status === "RESOLVED") {
+      // 1. Resolve Count: Count both "RESOLVED" and "CLOSED" in a single card
+      if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
         resolved++;
       } 
       else if (ticket.status === "IN_PROGRESS") inProgress++;
       else if (ticket.status === "ASSIGNED") assigned++;
-      else if (ticket.status === "OPEN" || ticket.status === "UNASSIGNED") pending++;
+      else if (ticket.status === "OPEN" || ticket.status === "UNASSIGNED") {
+        const hasRejectedAssignment = ticket.assignedTo?.some(a => a.status === "REJECTED");
+        if (hasRejectedAssignment) {
+          employeeRejected++;
+        } else {
+          pending++;
+        }
+      }
 
       // 2. Overdue: Check against assignment due dates (matching table logic)
       if (ticket.status !== "RESOLVED" && ticket.status !== "CLOSED") {
@@ -958,7 +966,7 @@ exports.getDepartmentReports = async (req, res) => {
         trendMap[createdDateStr].created += 1;
       }
 
-      if (ticket.status === "RESOLVED") {
+      if (ticket.status === "RESOLVED" || ticket.status === "CLOSED") {
         const closedDateStr = `${new Date(ticket.updatedAt).getDate().toString().padStart(2, '0')}-${(new Date(ticket.updatedAt).getMonth() + 1).toString().padStart(2, '0')}`;
         if (trendMap[closedDateStr]) {
           trendMap[closedDateStr].closed += 1;
@@ -983,7 +991,8 @@ exports.getDepartmentReports = async (req, res) => {
       { name: "Unassigned", value: pending, color: "#f97316" },
       { name: "Assigned", value: assigned, color: "#3b82f6" },
       { name: "In Progress", value: inProgress, color: "#eab308" },
-      { name: "Resolved", value: resolved, color: "#22c55e" }
+      { name: "Resolved", value: resolved, color: "#22c55e" },
+      { name: "Rejected Assignments", value: employeeRejected, color: "#dc2626" }
     ];
 
     const recentTickets = tickets.slice(0, 30).map(t => {

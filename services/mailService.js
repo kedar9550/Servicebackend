@@ -14,13 +14,13 @@ const transporter = nodemailer.createTransport({
 });
 
 // VERIFY SMTP ON STARTUP
-transporter.verify((error, success) => {
-    if (error) {
-        console.error(" SMTP VERIFY FAILED:", error);
-    } else {
-        // console.log(" SMTP SERVER READY");
-    }
-});
+// transporter.verify((error, success) => {
+//     if (error) {
+//         console.error(" SMTP VERIFY FAILED:", error);
+//     } else {
+//         // console.log(" SMTP SERVER READY");
+//     }
+// });
 
 // SEND OTP MAIL
 
