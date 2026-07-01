@@ -255,7 +255,11 @@ exports.addComment = async (req, res) => {
       message
     });
 
-    const populatedComment = await Comment.findById(comment._id).populate("user", "name email profileImage institutionId").lean();
+    const populatedComment = await Comment.findById(comment._id).populate({
+      path: "user",
+      model: User,
+      select: "name email profileImage institutionId"
+    }).lean();
     populatedComment.role = req.user.roles?.some(r => r.role === "ADMIN" || r.role === "EMPLOYEE") ? "Support Agent" : "User";
 
     try {

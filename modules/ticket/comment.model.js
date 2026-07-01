@@ -11,7 +11,8 @@ const commentSchema = new mongoose.Schema({
 
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    required: true // from auth DB
+    ref: "User",
+    required: true
   },
 
   message: {
