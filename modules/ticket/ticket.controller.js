@@ -67,7 +67,7 @@ exports.createTicket = async (req, res) => {
     });
 
     try {
-      const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
+      const adminRole = await Role.findOne({ name: "ADMIN", app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM" });
       if (adminRole) {
         const adminUsers = await UserAppRole.find({ role: adminRole._id, service: service });
         const io = socketService.getIO();
@@ -263,7 +263,7 @@ exports.addComment = async (req, res) => {
       io.to(`ticket_${req.params.id}`).emit("new_message", populatedComment);
 
       const ticket = await Ticket.findById(req.params.id);
-      const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
+      const adminRole = await Role.findOne({ name: "ADMIN", app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM" });
       const adminUsers = adminRole ? await UserAppRole.find({ role: adminRole._id, service: ticket.service }) : [];
       let participants = new Set([ticket.createdBy.toString()]);
       ticket.assignedTo.forEach(a => participants.add(a.user.toString()));
@@ -467,7 +467,7 @@ exports.updateAssignmentStatus = async (req, res) => {
       io.to(`user_${ticket.createdBy}`).emit("new_notification", feedbackNotif);
     }
 
-    const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
+    const adminRole = await Role.findOne({ name: "ADMIN", app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM" });
     if (adminRole) {
       const adminUsers = await UserAppRole.find({ role: adminRole._id, service: ticket.service });
       for (let admin of adminUsers) {

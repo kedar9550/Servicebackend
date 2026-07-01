@@ -18,7 +18,7 @@ const run = async () => {
     {
       $setOnInsert: {
         name: "SUPER_ADMIN",
-        app: "TICKET_SYSTEM",
+        app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
         permissions: allPermissions.map(p => p._id)
       }
     },
@@ -31,7 +31,7 @@ const run = async () => {
     {
       $setOnInsert: {
         name: "ADMIN",
-        app: "TICKET_SYSTEM",
+        app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
         permissions: getPermIds([
           "ASSIGN_TICKET",
           "CHANGE_PRIORITY",
@@ -49,7 +49,7 @@ const run = async () => {
     {
       $setOnInsert: {
         name: "EMPLOYEE",
-        app: "TICKET_SYSTEM",
+        app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
         permissions: getPermIds([
           "VIEW_ASSIGNED_TICKETS",
           "COMMENT_TICKET",
@@ -67,7 +67,7 @@ const run = async () => {
     {
       $setOnInsert: {
         name: "USER",
-        app: "TICKET_SYSTEM",
+        app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
         permissions: getPermIds([
           "CREATE_TICKET",
           "COMMENT_TICKET"

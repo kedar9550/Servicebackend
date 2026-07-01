@@ -15,12 +15,12 @@ const run = async () => {
   const superAdminRole =
     await Role.findOne({
       name: "SUPER_ADMIN",
-      app: "TICKET_SYSTEM"
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM"
     });
 
   await UserAppRole.create({
     userId,
-    app: "TICKET_SYSTEM",
+    app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
     role: superAdminRole._id
   });
 

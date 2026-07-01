@@ -18,7 +18,7 @@ exports.getTeamDashboard = async (req, res) => {
 
     const employeeRole = await Role.findOne({
       name: "EMPLOYEE",
-      app: "TICKET_SYSTEM"
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM"
     });
 
     // 1️ Fetch Team Mappings with User Details
@@ -112,7 +112,7 @@ exports.addTeamMember = async (req, res) => {
 
     const employeeRole = await Role.findOne({
       name: "EMPLOYEE",
-      app: "TICKET_SYSTEM"
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM"
     });
 
     if (!employeeRole)
@@ -133,7 +133,7 @@ exports.addTeamMember = async (req, res) => {
       userId: new mongoose.Types.ObjectId(userId),
       role: employeeRole._id,
       service: serviceId,
-      app: "TICKET_SYSTEM"
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM"
     });
 
     res.json({ message: "Team member added successfully" });
@@ -161,7 +161,7 @@ exports.removeTeamMember = async (req, res) => {
 
     const employeeRole = await Role.findOne({
       name: "EMPLOYEE",
-      app: "TICKET_SYSTEM"
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM"
     });
 
     await UserAppRole.findOneAndDelete({

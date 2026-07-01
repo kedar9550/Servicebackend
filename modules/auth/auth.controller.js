@@ -123,7 +123,7 @@ const registerUser = async (req, res) => {
 
     const defaultRole = await Role.findOne({
       name: "USER",
-      app: "TICKET_SYSTEM"
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM"
     });
 
     if (!defaultRole) {
@@ -134,7 +134,7 @@ const registerUser = async (req, res) => {
 
     await UserAppRole.create({
       userId: user._id,
-      app: "TICKET_SYSTEM",
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
       role: defaultRole._id,
       service: null
     });
@@ -279,7 +279,7 @@ const forgotPassword = async (req, res) => {
     }
 
     // Verify user has a role in this app
-    const appName = process.env.APP_NAME || "TICKET_SYSTEM";
+    const appName = process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM";
     const appMapping = await UserAppRole.findOne({
       userId: user._id,
       app: appName
@@ -571,7 +571,7 @@ const createAdmin = async (req, res) => {
 
     await UserAppRole.create({
       userId: admin._id,
-      app: "TICKET_SYSTEM",
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
       role: adminRole._id,
       service: serviceId
     });

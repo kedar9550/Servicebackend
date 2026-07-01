@@ -65,18 +65,18 @@ exports.assignAdminToService = async (req, res) => {
     const user = await User.findById(user_id);
     if (!user) return res.status(404).json({ message: "User not found. Please create user first." });
 
-    const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
+    const adminRole = await Role.findOne({ name: "ADMIN", app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM" });
 
     const alreadyAssigned = await UserAppRole.findOne({
       userId: user._id,
-      app: "TICKET_SYSTEM",
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
       service: serviceId
     });
     if (alreadyAssigned) return res.status(400).json({ message: "Already assigned as admin" });
 
     await UserAppRole.create({
       userId: user._id,
-      app: "TICKET_SYSTEM",
+      app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM",
       role: adminRole._id,
       service: serviceId
     });
@@ -91,7 +91,7 @@ exports.getServiceAdmins = async (req, res) => {
   try {
     const { serviceId } = req.params;
 
-    const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
+    const adminRole = await Role.findOne({ name: "ADMIN", app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM" });
 
     const admins = await UserAppRole.find({ service: serviceId, role: adminRole._id })
       .populate("userId", "name institutionId email")
@@ -127,8 +127,8 @@ exports.getServiceStats = async (req, res) => {
     ]);
 
     // 2️ Role IDs — ticketDB
-    const adminRole = await Role.findOne({ name: "ADMIN", app: "TICKET_SYSTEM" });
-    const employeeRole = await Role.findOne({ name: "EMPLOYEE", app: "TICKET_SYSTEM" });
+    const adminRole = await Role.findOne({ name: "ADMIN", app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM" });
+    const employeeRole = await Role.findOne({ name: "EMPLOYEE", app: process.env.APP_NAME || "DIGITAL_SERVICE_SYSTEM" });
 
     // 3️ Employee stats — ticketDB
     const employeeStats = await UserAppRole.aggregate([
